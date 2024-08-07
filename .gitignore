@@ -1,5 +1,0 @@
-__pycache__
-customers/__pycache__
-venv
-.gitignore
-test_db.py
