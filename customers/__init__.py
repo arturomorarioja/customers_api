@@ -1,3 +1,9 @@
+"""
+Customers sample API
+
+Author: Arturo Mora-Rioja
+Date: August 2024
+"""
 import os
 from dotenv import load_dotenv
 from flask import Flask
@@ -8,7 +14,8 @@ load_dotenv()
 def create_app():
     app = Flask(__name__)
     app.config.from_prefixed_env()
-    app.json.sort_keys = False  # This prevents jsonify() to reorder keys within each row
+    # This prevents jsonify() to reorder keys within each row
+    app.json.sort_keys = False  
 
     database.init_app(app)
 
