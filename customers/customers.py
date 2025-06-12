@@ -20,14 +20,12 @@ def get_customers():
         FROM customer 
     '''
     search_param = request.args.get('s')
-    print(search_param)
     if search_param:        # Search endpoint
         sql = sql + '''
             WHERE cFirstName LIKE ?
             OR cLastName LIKE ?
             ORDER BY dOnboarding DESC
         '''
-        print(sql)
         customers = db.execute(
             sql, (f'%{search_param}%', f'%{search_param}%')
         ).fetchall()

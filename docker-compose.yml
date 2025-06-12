@@ -1,0 +1,17 @@
+services:
+  python-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
+    volumes:
+      - .:/app.ro
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    networks:
+      - app_network
+  
+networks:
+  app_network:

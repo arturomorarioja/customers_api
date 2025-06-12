@@ -14,8 +14,13 @@ POST parameters are sent as form-data.
 |PUT|/customers/<customer_id>|first_name (optional), last_name (optional), phone_no (optional), address (optional), onboarding_date (optional)|
 |DELETE|/customers/<customer_id>||
 
-## Installation
+## Operation
 Python 3.4 or higher required.
+
+### Option #1. As a Docker container
+In the command line, run `docker-compose up -d`. Stop the container by running `docker-compose down`.
+
+### Option #2. Manually
 
 1. Create a virtual environment:
 ```
@@ -29,8 +34,7 @@ python -m venv venv
 
 3. Install dependencies:
 ```
-pip install Flask
-pip install python-dotenv
+pip install -r requirements.txt
 ```
 
 4. Create and populate the database:
@@ -38,8 +42,7 @@ pip install python-dotenv
 python -m flask --app customers init-db
 ```
 
-## Running the API
-Within (venv), run:
+To run the API, within (venv), run:
 ```
 python -m flask --app customers run --port 8001 --debug
 ```
