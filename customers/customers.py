@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, url_for
 from customers.database import get_db, format_db_data
+from urllib.parse import urlencode
 
 bp = Blueprint('customers', __name__)
 
@@ -32,17 +33,23 @@ def add_customer_links(customer: dict) -> dict:
     return customer
 
 
-def collection_links(search_param: str | None = None) -> list[dict]:
-    """Build top-level links for the customer collection."""
-    self_href = url_for('customers.get_customers', _external=True)
-    if search_param:
-        self_href = f'{self_href}?s={search_param}'
+def collection_links(search_param=None, offset=0, size=5, total_items=0):
+    """Build top-level links for the customer collection, including pagination."""
+    base_url = url_for('customers.get_customers', _external=True)
 
-    return [
+    def build_url(offset_value):
+        query = {}
+        if search_param:
+            query['s'] = search_param
+        query['offset'] = offset_value
+        query['size'] = size
+        return f'{base_url}?{urlencode(query)}'
+
+    links = [
         {
             'rel': 'self',
             'method': 'GET',
-            'href': self_href
+            'href': build_url(offset)
         },
         {
             'rel': 'create',
@@ -52,9 +59,29 @@ def collection_links(search_param: str | None = None) -> list[dict]:
         {
             'rel': 'search',
             'method': 'GET',
-            'href': f'{url_for("customers.get_customers", _external=True)}?s={{query}}'
+            'href': f'{base_url}?s={{query}}&offset=0&size={size}'
         }
     ]
+
+    # Previous page link
+    if offset > 0:
+        prev_offset = max(offset - size, 0)
+        links.append({
+            'rel': 'prev',
+            'method': 'GET',
+            'href': build_url(prev_offset)
+        })
+
+    # Next page link
+    if offset + size < total_items:
+        next_offset = offset + size
+        links.append({
+            'rel': 'next',
+            'method': 'GET',
+            'href': build_url(next_offset)
+        })
+
+    return links
 
 
 def error_message(customer_id: str | int | None = None):
@@ -81,31 +108,63 @@ def error_message(customer_id: str | int | None = None):
 @bp.route('/customers', methods=['GET'])
 def get_customers():
     db = get_db()
-    sql = '''
+
+    # Query parameters
+    search_param = request.args.get('s', default=None, type=str)
+    offset = request.args.get('offset', default=0, type=int)
+    size = request.args.get('size', default=5, type=int)
+
+    # Basic validation
+    if offset < 0 or size <= 0:
+        return jsonify({
+            'error': 'Invalid pagination parameters. Offset must be >= 0 and size must be > 0.'
+        }), 400
+
+    # Base fragments
+    select_sql = '''
         SELECT 
             nCustomerID, cFirstName, cLastName, cPhoneNo, cAddress, dOnboarding 
-        FROM customer 
+        FROM customer
     '''
-    search_param = request.args.get('s')
-    if search_param:        # Search endpoint
-        sql = sql + '''
-            WHERE cFirstName LIKE ?
-            OR cLastName LIKE ?
-            ORDER BY dOnboarding DESC
-        '''
-        rows = db.execute(
-            sql, (f'%{search_param}%', f'%{search_param}%')
-        ).fetchall()
-    else:                   # Get all customers endpoint
-        sql = sql + ' ORDER BY dOnboarding DESC'
-        rows = db.execute(sql).fetchall()
+    count_sql = 'SELECT COUNT(*) FROM customer'
+    where_sql = ''
+    params = []
 
+    # Optional search condition
+    if search_param:
+        where_sql = '''
+            WHERE cFirstName LIKE ?
+               OR cLastName LIKE ?
+        '''
+        params = [f'%{search_param}%', f'%{search_param}%']
+
+    # Total count (for pagination metadata and next/prev)
+    total_items = db.execute(count_sql + ' ' + where_sql, params).fetchone()[0]
+
+    # Data query with ordering and pagination
+    data_sql = select_sql + ' ' + where_sql + '''
+        ORDER BY dOnboarding DESC
+        LIMIT ? OFFSET ?
+    '''
+    data_params = params + [size, offset]
+
+    rows = db.execute(data_sql, data_params).fetchall()
     customers = [format_db_data(row) for row in rows]
     customers = [add_customer_links(c) for c in customers]
 
     response_body = {
         'items': customers,
-        'links': collection_links(search_param)
+        'pagination': {
+            'offset': offset,
+            'size': size,
+            'total_items': total_items
+        },
+        'links': collection_links(
+            search_param=search_param,
+            offset=offset,
+            size=size,
+            total_items=total_items
+        )
     }
     return jsonify(response_body), 200
 
