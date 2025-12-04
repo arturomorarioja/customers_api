@@ -52,4 +52,5 @@ The endpoints will be available at `http://localhost:8001`.
 SQLite / Python / Flask
 
 ## Author
-Arturo Mora-Rioja
+- Arturo Mora-Rioja
+- HATEOAS implemented by ChatGPT 5.1, prompted by Arturo Mora-Rioja
