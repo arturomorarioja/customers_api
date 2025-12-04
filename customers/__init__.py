@@ -21,6 +21,13 @@ def create_app():
 
     app.register_blueprint(customers.bp)
 
+    @app.after_request
+    def add_default_headers(response):
+        response.headers['X-API-Version'] = '1'
+        response.headers.setdefault('Content-Type', 'application/json')
+        
+        return response
+
     print(f'Current environment: {os.getenv("ENVIRONMENT")}')
     print(f'Using database: {app.config.get("DATABASE")}')
 
