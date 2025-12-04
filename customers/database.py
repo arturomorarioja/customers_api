@@ -31,10 +31,10 @@ def close_db(e=None):
 
 def format_db_data(data):
     return {
-        'Customer ID': data[0],
-        'First Name': data[1],
-        'Last Name': data[2],
-        'Phone No': data[3],
-        'Address': data[4],
-        'Onboarding Date': data[5]
+        'customer_id': data[0],
+        'first_name': data[1],
+        'last_name': data[2],
+        'phone_number': data[3],
+        'address': data[4],
+        'onboarding_date': data[5]
     }
