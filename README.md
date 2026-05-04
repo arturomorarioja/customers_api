@@ -19,11 +19,8 @@ POST parameters are sent as form-data.
 Default page for GET requests is 5. Search, pagination, and custom page size can be combined.
 
 ## Installation
-Python 3.4 or higher required.
-
-In the command line, run `docker-compose up -d --build`. Stop the container by running `docker-compose down`.
-
-The endpoints will be available at `http://localhost:8001`.
+- Run the Docker container: `docker compose up -d --build`. The endpoints will be available at `http://localhost:8001`
+- Stop the container: `docker-compose down`.
 
 ## Tools
 SQLite / Python / Flask
