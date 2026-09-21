@@ -1,0 +1,58 @@
+name: Postman Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  postman-tests:
+    name: Postman Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout API repository
+        uses: actions/checkout@v6
+
+      - name: Checkout Postman tests
+        uses: actions/checkout@v6
+        with:
+          repository: arturomorarioja/customers_api_postman
+          path: postman
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Install API dependencies
+        run: |
+          pip install Flask
+          pip install python-dotenv
+
+      - name: Initialize database
+        run: python -m flask --app customers init-db
+
+      - name: Start API
+        run: |
+          python -m flask --app customers run --port 8001 &
+          for i in {1..10}; do
+            curl --fail http://localhost:8001/customers && break
+            sleep 1
+          done
+          
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install Newman
+        run: npm install --global newman
+
+      - name: Run Postman tests
+        run: |
+          newman run postman/Customers.postman_collection.json \
+            --environment postman/Customers.postman_environment.json
