@@ -34,7 +34,7 @@ def format_db_data(data):
         'customer_id': data[0],
         'first_name': data[1],
         'last_name': data[2],
-        'phone_number': data[3],
+        'phone_no': data[3],
         'address': data[4],
         'onboarding_date': data[5]
     }
